@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="grid-2">
+    <div class="card">
+        <h2>Adicionar Corretora</h2>
+        <form method="POST">
+            <div>
+                <label>Nome da Corretora:</label>
+                <input type="text" name="nome" placeholder="Ex: XP, Clear, Rico..." required>
+            </div>
+            <button type="submit">Adicionar Corretora</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Corretoras Cadastradas</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for corretora in corretoras %}
+                <tr>
+                    <td>{{ corretora.id }}</td>
+                    <td>{{ corretora.nome }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
