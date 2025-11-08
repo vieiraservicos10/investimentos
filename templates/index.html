@@ -2,46 +2,140 @@
 
 {% block content %}
 <div class="card">
-    <h2>Dashboard</h2>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 2rem 0;">
+    <h2>Resumo Geral</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0;">
         <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px;">
-            <h3>Total Investido</h3>
-            <p style="font-size: 1.5rem; font-weight: bold;">R$ {{ "%.2f"|format(total_investido) }}</p>
+            <h3>Total Depositado</h3>
+            <p style="font-size: 1.5rem; font-weight: bold;">R$ {{ "%.2f"|format(total_depositado) }}</p>
         </div>
         <div style="background: #fff3cd; padding: 1rem; border-radius: 8px;">
-            <h3>Total Retirado</h3>
-            <p style="font-size: 1.5rem; font-weight: bold;">R$ {{ "%.2f"|format(total_retirado) }}</p>
+            <h3>Total em Compras</h3>
+            <p style="font-size: 1.5rem; font-weight: bold;">R$ {{ "%.2f"|format(total_compras) }}</p>
+        </div>
+        <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px;">
+            <h3>Total em Vendas</h3>
+            <p style="font-size: 1.5rem; font-weight: bold;">R$ {{ "%.2f"|format(total_vendas) }}</p>
+        </div>
+        <div style="background: #d4edda; padding: 1rem; border-radius: 8px;">
+            <h3>Saldo Disponível</h3>
+            <p style="font-size: 1.5rem; font-weight: bold; color: {% if saldo_total >= 0 %}#27ae60{% else %}#e74c3c{% endif %};">
+                R$ {{ "%.2f"|format(saldo_total) }}
+            </p>
         </div>
     </div>
 </div>
 
-<div class="card">
-    <h2>Últimas Operações</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Data</th>
-                <th>Corretora</th>
-                <th>Ativo</th>
-                <th>Tipo</th>
-                <th>Quantidade</th>
-                <th>Preço Unit.</th>
-                <th>Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for op in operacoes %}
-            <tr>
-                <td>{{ op.data }}</td>
-                <td>{{ op.corretora_nome }}</td>
-                <td>{{ op.ativo_ticker }}</td>
-                <td>{{ op.tipo }}</td>
-                <td>{{ op.quantidade }}</td>
-                <td>R$ {{ "%.2f"|format(op.preco_unitario) }}</td>
-                <td>R$ {{ "%.2f"|format(op.total) }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="grid-2">
+    <div class="card">
+        <h2>Saldo por Corretora</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Corretora</th>
+                    <th>Depositado</th>
+                    <th>Compras</th>
+                    <th>Vendas</th>
+                    <th>Saldo Disponível</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for saldo in saldos %}
+                <tr>
+                    <td><strong>{{ saldo[1] }}</strong></td>
+                    <td>R$ {{ "%.2f"|format(saldo[2]) }}</td>
+                    <td>R$ {{ "%.2f"|format(saldo[3]) }}</td>
+                    <td>R$ {{ "%.2f"|format(saldo[4]) }}</td>
+                    <td class="{% if saldo[5] >= 0 %}positive{% else %}negative{% endif %}">
+                        R$ {{ "%.2f"|format(saldo[5]) }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Carteira Atual</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Ativo</th>
+                    <th>Quantidade</th>
+                    <th>Valor Investido</th>
+                    <th>Preço Médio</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ativo in carteira %}
+                <tr>
+                    <td>{{ ativo[0] }}</td>
+                    <td>{{ ativo[1] }}</td>
+                    <td>R$ {{ "%.2f"|format(ativo[2]) }}</td>
+                    <td>R$ {{ "%.2f"|format(ativo[3]) }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center;">Nenhum ativo na carteira</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <h2>Últimos Depósitos</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Corretora</th>
+                    <th>Valor</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for deposito in ultimos_depositos %}
+                <tr>
+                    <td>{{ deposito.data }}</td>
+                    <td>{{ deposito.corretora_nome }}</td>
+                    <td>R$ {{ "%.2f"|format(deposito.valor) }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" style="text-align: center;">Nenhum depósito cadastrado</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Últimas Notas</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Corretora</th>
+                    <th>N° Nota</th>
+                    <th>Valor</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for nota in ultimas_notas %}
+                <tr>
+                    <td>{{ nota.data }}</td>
+                    <td>{{ nota.corretora_nome }}</td>
+                    <td>{{ nota.numero_nota or '-' }}</td>
+                    <td>R$ {{ "%.2f"|format(nota.valor_total) }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center;">Nenhuma nota cadastrada</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}
