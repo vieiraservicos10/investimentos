@@ -8,4 +8,5 @@ sistema_investimentos/
     ├── base.html
     ├── index.html
     ├── lancamentos.html
+    ├── corretoras.html
     └── visualizacao.html
