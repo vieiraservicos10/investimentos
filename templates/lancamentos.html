@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+    <div class="card">
+        <h2>Nova Operação</h2>
+        <form method="POST">
+            <div>
+                <label>Data:</label>
+                <input type="date" name="data" value="{{ now }}" required>
+            </div>
+            
+            <div>
+                <label>Corretora:</label>
+                <select name="corretora_id" required>
+                    <option value="">Selecione...</option>
+                    {% for corretora in corretoras %}
+                    <option value="{{ corretora.id }}">{{ corretora.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label>Ticker do Ativo:</label>
+                <input type="text" name="ativo_ticker" placeholder="PETR4, VALE3..." required>
+            </div>
+            
+            <div>
+                <label>Nome do Ativo (opcional):</label>
+                <input type="text" name="ativo_nome" placeholder="Petrobras, Vale...">
+            </div>
+            
+            <div>
+                <label>Categoria (opcional):</label>
+                <input type="text" name="ativo_categoria" placeholder="Ações, FIIs, ETFs...">
+            </div>
+            
+            <div>
+                <label>Tipo de Operação:</label>
+                <select name="tipo" required>
+                    <option value="compra">Compra</option>
+                    <option value="venda">Venda</option>
+                    <option value="dividendo">Dividendo/Proventos</option>
+                </select>
+            </div>
+            
+            <div>
+                <label>Quantidade:</label>
+                <input type="number" name="quantidade" min="1" required>
+            </div>
+            
+            <div>
+                <label>Preço Unitário (R$):</label>
+                <input type="number" name="preco_unitario" step="0.01" min="0" required>
+            </div>
+            
+            <div>
+                <label>Taxas (R$):</label>
+                <input type="number" name="taxas" step="0.01" min="0" value="0">
+            </div>
+            
+            <button type="submit">Registrar Operação</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Histórico de Operações</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Corretora</th>
+                    <th>Ativo</th>
+                    <th>Tipo</th>
+                    <th>Qtd</th>
+                    <th>Preço</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for op in operacoes %}
+                <tr>
+                    <td>{{ op.data }}</td>
+                    <td>{{ op.corretora_nome }}</td>
+                    <td>{{ op.ativo_ticker }}</td>
+                    <td>{{ op.tipo }}</td>
+                    <td>{{ op.quantidade }}</td>
+                    <td>R$ {{ "%.2f"|format(op.preco_unitario) }}</td>
+                    <td>R$ {{ "%.2f"|format(op.total) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
