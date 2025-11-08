@@ -28,6 +28,10 @@
                     <td>{{ corretora.id }}</td>
                     <td>{{ corretora.nome }}</td>
                 </tr>
+                {% else %}
+                <tr>
+                    <td colspan="2" style="text-align: center;">Nenhuma corretora cadastrada</td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
