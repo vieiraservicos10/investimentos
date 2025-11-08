@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <h2>Visualização de Carteira</h2>
+    
+    <form method="GET" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; margin: 1rem 0;">
+        <div>
+            <label>Filtrar por Corretora:</label>
+            <select name="corretora_id">
+                <option value="">Todas as Corretoras</option>
+                {% for corretora in corretoras %}
+                <option value="{{ corretora.id }}" 
+                    {% if corretora_selecionada and corretora.id == corretora_selecionada.id %}selected{% endif %}>
+                    {{ corretora.nome }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div>
+            <label>Agrupar por:</label>
+            <select name="agrupar_por">
+                <option value="ativo" {% if agrupar_por == 'ativo' %}selected{% endif %}>Ativo</option>
+                <option value="categoria" {% if agrupar_por == 'categoria' %}selected{% endif %}>Categoria</option>
+            </select>
+        </div>
+        
+        <div style="align-self: end;">
+            <button type="submit">Filtrar</button>
+        </div>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                {% if agrupar_por == 'ativo' %}
+                <th>Ticker</th>
+                <th>Nome</th>
+                <th>Categoria</th>
+                {% else %}
+                <th>Categoria</th>
+                {% endif %}
+                <th>Quantidade</th>
+                <th>Valor Total</th>
+                <th>Preço Médio</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in dados %}
+            <tr>
+                {% if agrupar_por == 'ativo' %}
+                <td>{{ row[0] }}</td>
+                <td>{{ row[1] }}</td>
+                <td>{{ row[2] }}</td>
+                <td>{{ row[3] }}</td>
+                <td>R$ {{ "%.2f"|format(row[4]) }}</td>
+                <td>R$ {{ "%.2f"|format(row[5]) }}</td>
+                {% else %}
+                <td>{{ row[0] }}</td>
+                <td>{{ row[1] }}</td>
+                <td>R$ {{ "%.2f"|format(row[2]) }}</td>
+                <td>R$ {{ "%.2f"|format(row[3]) }}</td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
