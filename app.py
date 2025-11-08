@@ -97,6 +97,26 @@ def criar_corretora():
     
     return jsonify({'success': True})
 
+@app.route('/debug')
+def debug():
+    from models import Corretora, Database
+    
+    # Verificar corretoras no banco
+    corretoras = Corretora.buscar_todas()
+    result = f"Corretoras encontradas: {len(corretoras)}<br>"
+    
+    for c in corretoras:
+        result += f"ID: {c.id}, Nome: {c.nome}<br>"
+    
+    # Verificar estrutura do banco
+    db = Database()
+    tables = db.fetch_all("SELECT name FROM sqlite_master WHERE type='table'")
+    result += "<br>Tabelas no banco:<br>"
+    for table in tables:
+        result += f"{table[0]}<br>"
+    
+    return result
+
 if __name__ == '__main__':
     # Criar alguns dados de exemplo
     from database import Database
