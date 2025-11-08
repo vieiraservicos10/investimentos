@@ -223,13 +223,7 @@ if __name__ == '__main__':
         if not corretoras_existentes:
             print("Criando corretoras padrão...")
             corretoras_padrao = [
-                'XP Investimentos',
-                'Clear Corretora', 
                 'Rico Investimentos',
-                'BTG Pactual',
-                'Avenue',
-                'Inter',
-                'Agora',
                 'Toro Investimentos'
             ]
             
