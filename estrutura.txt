@@ -1,0 +1,11 @@
+sistema_investimentos/
+│
+├── app.py
+├── database.py
+├── models.py
+├── requirements.txt
+└── templates/
+    ├── base.html
+    ├── index.html
+    ├── lancamentos.html
+    └── visualizacao.html
