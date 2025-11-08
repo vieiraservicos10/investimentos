@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="grid-2">
+    <div class="card">
+        <h2>Novo Depósito</h2>
+        <form method="POST">
+            <div>
+                <label>Data:</label>
+                <input type="date" name="data" required>
+            </div>
+            
+            <div>
+                <label>Corretora:</label>
+                <select name="corretora_id" required>
+                    <option value="">Selecione...</option>
+                    {% for corretora in corretoras %}
+                    <option value="{{ corretora.id }}">{{ corretora.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label>Valor (R$):</label>
+                <input type="number" name="valor" step="0.01" min="0" required>
+            </div>
+            
+            <button type="submit">Registrar Depósito</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Histórico de Depósitos</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Corretora</th>
+                    <th>Valor</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for deposito in depositos %}
+                <tr>
+                    <td>{{ deposito.data }}</td>
+                    <td>{{ deposito.corretora_nome }}</td>
+                    <td>R$ {{ "%.2f"|format(deposito.valor) }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" style="text-align: center;">Nenhum depósito cadastrado</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
