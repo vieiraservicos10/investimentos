@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <h2>Detalhes da Nota de Corretagem</h2>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+        <div>
+            <strong>Data:</strong> {{ nota.data }}
+        </div>
+        <div>
+            <strong>Corretora:</strong> {{ nota.corretora_nome }}
+        </div>
+        <div>
+            <strong>N° Nota:</strong> {{ nota.numero_nota or '-' }}
+        </div>
+        <div>
+            <strong>Valor Total:</strong> R$ {{ "%.2f"|format(nota.valor_total) }}
+        </div>
+        <div>
+            <strong>ID da Nota:</strong> {{ nota.id }}
+        </div>
+    </div>
+
+    <h3>Operações ({{ operacoes|length }} encontradas)</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Ticker</th>
+                <th>Tipo</th>
+                <th>Quantidade</th>
+                <th>Preço Unit.</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for op in operacoes %}
+            <tr>
+                <td>{{ op.ticker }}</td>
+                <td>{{ 'Compra' if op.tipo == 'C' else 'Venda' }}</td>
+                <td>{{ op.quantidade }}</td>
+                <td>R$ {{ "%.2f"|format(op.preco) }}</td>
+                <td>R$ {{ "%.2f"|format(op.total) }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" style="text-align: center; color: #e74c3c;">
+                    Nenhuma operação encontrada para esta nota (ID: {{ nota.id }})
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div style="margin-top: 2rem;">
+        <a href="{{ url_for('notas_corretagem') }}" style="background: #3498db; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px;">← Voltar para Notas</a>
+    </div>
+</div>
+{% endblock %}
