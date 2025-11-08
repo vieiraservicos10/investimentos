@@ -4,182 +4,263 @@ from datetime import datetime
 db = Database()
 
 class Corretora:
-    def __init__(self, id=None, nome=None, saldo=0):
+    def __init__(self, id=None, nome=None):
         self.id = id
         self.nome = nome
-        self.saldo = saldo
     
     def salvar(self):
         if self.id:
             db.execute_query(
-                "UPDATE corretoras SET nome = ?, saldo = ? WHERE id = ?",
-                (self.nome, self.saldo, self.id)
+                "UPDATE corretoras SET nome = ? WHERE id = ?",
+                (self.nome, self.id)
             )
         else:
             db.execute_query(
-                "INSERT INTO corretoras (nome, saldo) VALUES (?, ?)",
-                (self.nome, self.saldo)
+                "INSERT INTO corretoras (nome) VALUES (?)",
+                (self.nome,)
             )
     
     @staticmethod
     def buscar_todas():
         results = db.fetch_all("SELECT * FROM corretoras ORDER BY nome")
-        return [Corretora(id=row[0], nome=row[1], saldo=row[2]) for row in results]
+        return [Corretora(id=row[0], nome=row[1]) for row in results]
     
     @staticmethod
     def buscar_por_id(id):
         result = db.fetch_one("SELECT * FROM corretoras WHERE id = ?", (id,))
         if result:
-            return Corretora(id=result[0], nome=result[1], saldo=result[2])
+            return Corretora(id=result[0], nome=result[1])
         return None
 
-class Ativo:
-    def __init__(self, id=None, ticker=None, nome=None, categoria=None):
+class Deposito:
+    def __init__(self, id=None, data=None, corretora_id=None, valor=None):
         self.id = id
-        self.ticker = ticker
-        self.nome = nome
-        self.categoria = categoria
+        self.data = data
+        self.corretora_id = corretora_id
+        self.valor = valor
     
     def salvar(self):
         if self.id:
             db.execute_query(
-                "UPDATE ativos SET ticker = ?, nome = ?, categoria = ? WHERE id = ?",
-                (self.ticker, self.nome, self.categoria, self.id)
+                "UPDATE depositos SET data = ?, corretora_id = ?, valor = ? WHERE id = ?",
+                (self.data, self.corretora_id, self.valor, self.id)
             )
         else:
             db.execute_query(
-                "INSERT INTO ativos (ticker, nome, categoria) VALUES (?, ?, ?)",
-                (self.ticker, self.nome, self.categoria)
+                "INSERT INTO depositos (data, corretora_id, valor) VALUES (?, ?, ?)",
+                (self.data, self.corretora_id, self.valor)
             )
     
     @staticmethod
     def buscar_todos():
-        results = db.fetch_all("SELECT * FROM ativos ORDER BY ticker")
-        return [Ativo(id=row[0], ticker=row[1], nome=row[2], categoria=row[3]) for row in results]
-    
-    @staticmethod
-    def buscar_por_ticker(ticker):
-        result = db.fetch_one("SELECT * FROM ativos WHERE ticker = ?", (ticker,))
-        if result:
-            return Ativo(id=result[0], ticker=result[1], nome=result[2], categoria=result[3])
-        return None
+        results = db.fetch_all('''
+            SELECT d.*, c.nome as corretora_nome 
+            FROM depositos d 
+            JOIN corretoras c ON d.corretora_id = c.id 
+            ORDER BY d.data DESC
+        ''')
+        depositos = []
+        for row in results:
+            dep = Deposito(id=row[0], data=row[1], corretora_id=row[2], valor=row[3])
+            dep.corretora_nome = row[4]
+            depositos.append(dep)
+        return depositos
 
-class Operacao:
-    def __init__(self, id=None, data=None, corretora_id=None, ativo_id=None, 
-                 tipo=None, quantidade=None, preco_unitario=None, taxas=0, total=None):
+class NotaCorretagem:
+    def __init__(self, id=None, data=None, corretora_id=None, numero_nota=None, valor_total=None):
         self.id = id
         self.data = data
         self.corretora_id = corretora_id
-        self.ativo_id = ativo_id
-        self.tipo = tipo
-        self.quantidade = quantidade
-        self.preco_unitario = preco_unitario
-        self.taxas = taxas
-        self.total = total
+        self.numero_nota = numero_nota
+        self.valor_total = valor_total
     
     def salvar(self):
-        # Calcular total
-        if self.tipo == 'compra':
-            self.total = (self.quantidade * self.preco_unitario) + self.taxas
-        else:  # venda ou dividendo
-            self.total = (self.quantidade * self.preco_unitario) - self.taxas
-        
         if self.id:
-            db.execute_query('''
-                UPDATE operacoes SET data = ?, corretora_id = ?, ativo_id = ?, tipo = ?,
-                quantidade = ?, preco_unitario = ?, taxas = ?, total = ? WHERE id = ?
-            ''', (self.data, self.corretora_id, self.ativo_id, self.tipo,
-                  self.quantidade, self.preco_unitario, self.taxas, self.total, self.id))
+            db.execute_query(
+                "UPDATE notas_corretagem SET data = ?, corretora_id = ?, numero_nota = ?, valor_total = ? WHERE id = ?",
+                (self.data, self.corretora_id, self.numero_nota, self.valor_total, self.id)
+            )
         else:
-            db.execute_query('''
-                INSERT INTO operacoes (data, corretora_id, ativo_id, tipo, quantidade, 
-                preco_unitario, taxas, total) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (self.data, self.corretora_id, self.ativo_id, self.tipo,
-                  self.quantidade, self.preco_unitario, self.taxas, self.total))
+            db.execute_query(
+                "INSERT INTO notas_corretagem (data, corretora_id, numero_nota, valor_total) VALUES (?, ?, ?, ?)",
+                (self.data, self.corretora_id, self.numero_nota, self.valor_total)
+            )
+            # Retornar o ID da nota inserida
+            result = db.fetch_one("SELECT last_insert_rowid()")
+            return result[0] if result else None
+        return self.id
     
     @staticmethod
     def buscar_todas():
         results = db.fetch_all('''
-            SELECT o.*, c.nome as corretora_nome, a.ticker as ativo_ticker, a.nome as ativo_nome
-            FROM operacoes o
-            JOIN corretoras c ON o.corretora_id = c.id
-            JOIN ativos a ON o.ativo_id = a.id
-            ORDER BY o.data DESC
+            SELECT n.*, c.nome as corretora_nome 
+            FROM notas_corretagem n 
+            JOIN corretoras c ON n.corretora_id = c.id 
+            ORDER BY n.data DESC
         ''')
+        notas = []
+        for row in results:
+            nota = NotaCorretagem(id=row[0], data=row[1], corretora_id=row[2], 
+                                numero_nota=row[3], valor_total=row[4])
+            nota.corretora_nome = row[5]
+            notas.append(nota)
+        return notas
+    
+    @staticmethod
+    def buscar_por_id(id):
+        result = db.fetch_one('''
+            SELECT n.*, c.nome as corretora_nome 
+            FROM notas_corretagem n 
+            JOIN corretoras c ON n.corretora_id = c.id 
+            WHERE n.id = ?
+        ''', (id,))
+        if result:
+            nota = NotaCorretagem(id=result[0], data=result[1], corretora_id=result[2], 
+                                numero_nota=result[3], valor_total=result[4])
+            nota.corretora_nome = result[5]
+            return nota
+        return None
+
+class Operacao:
+    def __init__(self, id=None, nota_id=None, ticker=None, tipo=None, quantidade=None, preco=None, total=None):
+        self.id = id
+        self.nota_id = nota_id
+        self.ticker = ticker
+        self.tipo = tipo
+        self.quantidade = quantidade
+        self.preco = preco
+        self.total = total
+    
+    def salvar(self):
+        if self.id:
+            db.execute_query(
+                "UPDATE operacoes SET nota_id = ?, ticker = ?, tipo = ?, quantidade = ?, preco = ?, total = ? WHERE id = ?",
+                (self.nota_id, self.ticker, self.tipo, self.quantidade, self.preco, self.total, self.id)
+            )
+        else:
+            db.execute_query(
+                "INSERT INTO operacoes (nota_id, ticker, tipo, quantidade, preco, total) VALUES (?, ?, ?, ?, ?, ?)",
+                (self.nota_id, self.ticker, self.tipo, self.quantidade, self.preco, self.total)
+            )
+    
+    @staticmethod
+    def buscar_por_nota(nota_id):
+        results = db.fetch_all('''
+            SELECT * FROM operacoes WHERE nota_id = ? ORDER BY ticker
+        ''', (nota_id,))
         operacoes = []
         for row in results:
-            op = Operacao(
-                id=row[0], data=row[1], corretora_id=row[2], ativo_id=row[3],
-                tipo=row[4], quantidade=row[5], preco_unitario=row[6],
-                taxas=row[7], total=row[8]
-            )
-            op.corretora_nome = row[9]
-            op.ativo_ticker = row[10]
-            op.ativo_nome = row[11]
+            op = Operacao(id=row[0], nota_id=row[1], ticker=row[2], tipo=row[3], 
+                         quantidade=row[4], preco=row[5], total=row[6])
             operacoes.append(op)
         return operacoes
 
 class Relatorio:
     @staticmethod
-    def calcular_preco_medio_por_ativo(corretora_id=None):
+    def calcular_resumo_por_corretora():
+        """Calcula resumo detalhado por corretora - CORRETO"""
         query = '''
             SELECT 
-                a.ticker,
-                a.nome,
-                a.categoria,
-                SUM(CASE WHEN o.tipo = 'compra' THEN o.quantidade ELSE -o.quantidade END) as quantidade_total,
-                SUM(CASE WHEN o.tipo = 'compra' THEN o.total ELSE -o.total END) as valor_total,
-                CASE 
-                    WHEN SUM(CASE WHEN o.tipo = 'compra' THEN o.quantidade ELSE -o.quantidade END) > 0 
-                    THEN SUM(CASE WHEN o.tipo = 'compra' THEN o.total ELSE -o.total END) / 
-                         SUM(CASE WHEN o.tipo = 'compra' THEN o.quantidade ELSE -o.quantidade END)
-                    ELSE 0 
-                END as preco_medio
-            FROM operacoes o
-            JOIN ativos a ON o.ativo_id = a.id
+                c.id,
+                c.nome,
+                COALESCE((
+                    SELECT SUM(d.valor) 
+                    FROM depositos d 
+                    WHERE d.corretora_id = c.id
+                ), 0) as total_depositado,
+                COALESCE((
+                    SELECT SUM(
+                        CASE 
+                            WHEN o.tipo = 'C' THEN o.total
+                            ELSE 0 
+                        END
+                    )
+                    FROM operacoes o
+                    JOIN notas_corretagem n ON o.nota_id = n.id
+                    WHERE n.corretora_id = c.id
+                ), 0) as total_compras,
+                COALESCE((
+                    SELECT SUM(
+                        CASE 
+                            WHEN o.tipo = 'V' THEN o.total
+                            ELSE 0 
+                        END
+                    )
+                    FROM operacoes o
+                    JOIN notas_corretagem n ON o.nota_id = n.id
+                    WHERE n.corretora_id = c.id
+                ), 0) as total_vendas,
+                COALESCE((
+                    SELECT SUM(d.valor) 
+                    FROM depositos d 
+                    WHERE d.corretora_id = c.id
+                ), 0) + COALESCE((
+                    SELECT SUM(
+                        CASE 
+                            WHEN o.tipo = 'C' THEN -o.total
+                            WHEN o.tipo = 'V' THEN o.total
+                            ELSE 0 
+                        END
+                    )
+                    FROM operacoes o
+                    JOIN notas_corretagem n ON o.nota_id = n.id
+                    WHERE n.corretora_id = c.id
+                ), 0) as saldo_disponivel,
+                COALESCE((
+                    SELECT SUM(
+                        CASE 
+                            WHEN o.tipo = 'C' THEN o.total
+                            WHEN o.tipo = 'V' THEN -o.total
+                            ELSE 0 
+                        END
+                    )
+                    FROM operacoes o
+                    JOIN notas_corretagem n ON o.nota_id = n.id
+                    WHERE n.corretora_id = c.id
+                ), 0) as valor_investido_liquido
+            FROM corretoras c
+            ORDER BY c.nome
         '''
-        
-        if corretora_id:
-            query += " WHERE o.corretora_id = ?"
-            params = (corretora_id,)
-        else:
-            params = ()
-            
-        query += '''
-            GROUP BY a.ticker, a.nome, a.categoria
-            HAVING quantidade_total > 0
-            ORDER BY a.categoria, a.ticker
-        '''
-        
-        return db.fetch_all(query, params)
+        return db.fetch_all(query)
     
     @staticmethod
-    def calcular_preco_medio_por_categoria(corretora_id=None):
-        query = '''
-            SELECT 
-                a.categoria,
-                SUM(CASE WHEN o.tipo = 'compra' THEN o.quantidade ELSE -o.quantidade END) as quantidade_total,
-                SUM(CASE WHEN o.tipo = 'compra' THEN o.total ELSE -o.total END) as valor_total,
-                CASE 
-                    WHEN SUM(CASE WHEN o.tipo = 'compra' THEN o.quantidade ELSE -o.quantidade END) > 0 
-                    THEN SUM(CASE WHEN o.tipo = 'compra' THEN o.total ELSE -o.total END) / 
-                         SUM(CASE WHEN o.tipo = 'compra' THEN o.quantidade ELSE -o.quantidade END)
-                    ELSE 0 
-                END as preco_medio
-            FROM operacoes o
-            JOIN ativos a ON o.ativo_id = a.id
-        '''
-        
+    def calcular_carteira_por_corretora(corretora_id=None):
+        """Calcula a carteira atual por corretora"""
         if corretora_id:
-            query += " WHERE o.corretora_id = ?"
-            params = (corretora_id,)
+            query = '''
+                SELECT 
+                    o.ticker,
+                    SUM(CASE WHEN o.tipo = 'C' THEN o.quantidade ELSE -o.quantidade END) as quantidade,
+                    SUM(CASE WHEN o.tipo = 'C' THEN o.total ELSE -o.total END) as valor_investido,
+                    CASE 
+                        WHEN SUM(CASE WHEN o.tipo = 'C' THEN o.quantidade ELSE -o.quantidade END) > 0 
+                        THEN SUM(CASE WHEN o.tipo = 'C' THEN o.total ELSE -o.total END) / 
+                             SUM(CASE WHEN o.tipo = 'C' THEN o.quantidade ELSE -o.quantidade END)
+                        ELSE 0 
+                    END as preco_medio
+                FROM operacoes o
+                JOIN notas_corretagem n ON o.nota_id = n.id
+                WHERE n.corretora_id = ?
+                GROUP BY o.ticker
+                HAVING quantidade > 0
+                ORDER BY o.ticker
+            '''
+            return db.fetch_all(query, (corretora_id,))
         else:
-            params = ()
-            
-        query += '''
-            GROUP BY a.categoria
-            HAVING quantidade_total > 0
-            ORDER BY a.categoria
-        '''
-        
-        return db.fetch_all(query, params)
+            query = '''
+                SELECT 
+                    o.ticker,
+                    SUM(CASE WHEN o.tipo = 'C' THEN o.quantidade ELSE -o.quantidade END) as quantidade,
+                    SUM(CASE WHEN o.tipo = 'C' THEN o.total ELSE -o.total END) as valor_investido,
+                    CASE 
+                        WHEN SUM(CASE WHEN o.tipo = 'C' THEN o.quantidade ELSE -o.quantidade END) > 0 
+                        THEN SUM(CASE WHEN o.tipo = 'C' THEN o.total ELSE -o.total END) / 
+                             SUM(CASE WHEN o.tipo = 'C' THEN o.quantidade ELSE -o.quantidade END)
+                        ELSE 0 
+                    END as preco_medio
+                FROM operacoes o
+                GROUP BY o.ticker
+                HAVING quantidade > 0
+                ORDER BY o.ticker
+            '''
+            return db.fetch_all(query)
