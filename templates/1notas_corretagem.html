@@ -4,7 +4,7 @@
 <div class="card">
     <h2>Nova Nota de Corretagem</h2>
     <form method="POST" id="notaForm">
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
             <div>
                 <label>Data:</label>
                 <input type="date" name="data" required>
@@ -28,12 +28,6 @@
             <div>
                 <label>Valor Total (R$):</label>
                 <input type="number" name="valor_total" step="0.01" required>
-            </div>
-            
-            <!-- NOVO CAMPO TAXAS -->
-            <div>
-                <label>Taxas (R$):</label>
-                <input type="number" name="taxas" step="0.01" value="0">
             </div>
         </div>
 
@@ -86,7 +80,6 @@
                 <th>Corretora</th>
                 <th>N° Nota</th>
                 <th>Valor Total</th>
-                <th>Taxas</th>
                 <th>Ações</th>
             </tr>
         </thead>
@@ -97,12 +90,11 @@
                 <td>{{ nota.corretora_nome }}</td>
                 <td>{{ nota.numero_nota or '-' }}</td>
                 <td>R$ {{ "%.2f"|format(nota.valor_total) }}</td>
-                <td>R$ {{ "%.2f"|format(nota.taxas) }}</td>
                 <td><a href="{{ url_for('detalhes_nota', nota_id=nota.id) }}">Ver Detalhes</a></td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="6" style="text-align: center;">Nenhuma nota cadastrada</td>
+                <td colspan="5" style="text-align: center;">Nenhuma nota cadastrada</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -120,9 +112,6 @@ function adicionarOperacao() {
             input.value = '';
         }
     });
-    
-    // Resetar o select para Compra
-    novaOperacao.querySelector('select').value = 'C';
     
     container.appendChild(novaOperacao);
 }
@@ -147,37 +136,19 @@ document.addEventListener('input', function(e) {
 
 // Processar formulário antes do envio
 document.getElementById('notaForm').addEventListener('submit', function(e) {
-    console.log("=== INICIANDO ENVIO DO FORMULÁRIO ===");
-    
-    // Remover campos hidden antigos
-    const oldHidden = document.querySelectorAll('input[name="operacoes[]"]');
-    oldHidden.forEach(input => input.remove());
-    
+    const operacoes = [];
     let operacoesValidas = false;
-    let operacoesCount = 0;
     
-    document.querySelectorAll('.operacao').forEach((op, index) => {
-        const ticker = op.querySelector('input[name="ticker[]"]').value.trim();
+    document.querySelectorAll('.operacao').forEach(op => {
+        const ticker = op.querySelector('input[name="ticker[]"]').value;
         const tipo = op.querySelector('select[name="tipo[]"]').value;
         const quantidade = op.querySelector('input[name="quantidade[]"]').value;
         const preco = op.querySelector('input[name="preco[]"]').value;
         const total = op.querySelector('input[name="total[]"]').value;
         
-        console.log(`Operação ${index}: ${ticker} | ${tipo} | ${quantidade} | ${preco} | ${total}`);
-        
-        if (ticker && quantidade && preco && total) {
+        if (ticker && quantidade && preco) {
             operacoesValidas = true;
-            operacoesCount++;
-            const operacaoStr = `${ticker}|${tipo}|${quantidade}|${preco}|${total}`;
-            
-            // Criar um campo hidden para cada operação
-            const hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.name = 'operacoes[]';
-            hiddenInput.value = operacaoStr;
-            this.appendChild(hiddenInput);
-            
-            console.log(`✓ Operação ${index} adicionada: ${operacaoStr}`);
+            operacoes.push(`${ticker}|${tipo}|${quantidade}|${preco}|${total}`);
         }
     });
     
@@ -187,7 +158,16 @@ document.getElementById('notaForm').addEventListener('submit', function(e) {
         return;
     }
     
-    console.log(`=== FORMULÁRIO PRONTO: ${operacoesCount} operações ===`);
+    // Adicionar campo hidden com as operações
+    let hiddenInput = document.getElementById('operacoesHidden');
+    if (!hiddenInput) {
+        hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'operacoes[]';
+        hiddenInput.id = 'operacoesHidden';
+        this.appendChild(hiddenInput);
+    }
+    hiddenInput.value = operacoes.join(',');
 });
 </script>
 {% endblock %}

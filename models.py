@@ -67,28 +67,33 @@ class Deposito:
         return depositos
 
 class NotaCorretagem:
-    def __init__(self, id=None, data=None, corretora_id=None, numero_nota=None, valor_total=None):
+    def __init__(self, id=None, data=None, corretora_id=None, numero_nota=None, valor_total=None, taxas=0):
         self.id = id
         self.data = data
         self.corretora_id = corretora_id
         self.numero_nota = numero_nota
         self.valor_total = valor_total
+        self.taxas = taxas
     
     def salvar(self):
         if self.id:
             db.execute_query(
-                "UPDATE notas_corretagem SET data = ?, corretora_id = ?, numero_nota = ?, valor_total = ? WHERE id = ?",
-                (self.data, self.corretora_id, self.numero_nota, self.valor_total, self.id)
+                "UPDATE notas_corretagem SET data = ?, corretora_id = ?, numero_nota = ?, valor_total = ?, taxas = ? WHERE id = ?",
+                (self.data, self.corretora_id, self.numero_nota, self.valor_total, self.taxas, self.id)
             )
+            return self.id
         else:
-            db.execute_query(
-                "INSERT INTO notas_corretagem (data, corretora_id, numero_nota, valor_total) VALUES (?, ?, ?, ?)",
-                (self.data, self.corretora_id, self.numero_nota, self.valor_total)
+            # CORREÇÃO: Usar conexão direta para obter o ID correto
+            conn = db.get_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO notas_corretagem (data, corretora_id, numero_nota, valor_total, taxas) VALUES (?, ?, ?, ?, ?)",
+                (self.data, self.corretora_id, self.numero_nota, self.valor_total, self.taxas)
             )
-            # Retornar o ID da nota inserida
-            result = db.fetch_one("SELECT last_insert_rowid()")
-            return result[0] if result else None
-        return self.id
+            nota_id = cursor.lastrowid
+            conn.commit()
+            conn.close()
+            return nota_id
     
     @staticmethod
     def buscar_todas():
@@ -101,8 +106,8 @@ class NotaCorretagem:
         notas = []
         for row in results:
             nota = NotaCorretagem(id=row[0], data=row[1], corretora_id=row[2], 
-                                numero_nota=row[3], valor_total=row[4])
-            nota.corretora_nome = row[5]
+                                numero_nota=row[3], valor_total=row[4], taxas=row[5])
+            nota.corretora_nome = row[6]
             notas.append(nota)
         return notas
     
@@ -116,8 +121,8 @@ class NotaCorretagem:
         ''', (id,))
         if result:
             nota = NotaCorretagem(id=result[0], data=result[1], corretora_id=result[2], 
-                                numero_nota=result[3], valor_total=result[4])
-            nota.corretora_nome = result[5]
+                                numero_nota=result[3], valor_total=result[4], taxas=result[5])
+            nota.corretora_nome = result[6]
             return nota
         return None
 
@@ -158,7 +163,7 @@ class Operacao:
 class Relatorio:
     @staticmethod
     def calcular_resumo_por_corretora():
-        """Calcula resumo detalhado por corretora - CORRETO"""
+        """Calcula resumo detalhado por corretora - COM TAXAS"""
         query = '''
             SELECT 
                 c.id,
@@ -191,6 +196,11 @@ class Relatorio:
                     WHERE n.corretora_id = c.id
                 ), 0) as total_vendas,
                 COALESCE((
+                    SELECT SUM(n.taxas)
+                    FROM notas_corretagem n
+                    WHERE n.corretora_id = c.id
+                ), 0) as total_taxas,
+                COALESCE((
                     SELECT SUM(d.valor) 
                     FROM depositos d 
                     WHERE d.corretora_id = c.id
@@ -201,7 +211,7 @@ class Relatorio:
                             WHEN o.tipo = 'V' THEN o.total
                             ELSE 0 
                         END
-                    )
+                    ) - SUM(n.taxas)
                     FROM operacoes o
                     JOIN notas_corretagem n ON o.nota_id = n.id
                     WHERE n.corretora_id = c.id

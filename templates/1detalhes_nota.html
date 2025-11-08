@@ -17,15 +17,9 @@
         <div>
             <strong>Valor Total:</strong> R$ {{ "%.2f"|format(nota.valor_total) }}
         </div>
-        <div>
-            <strong>Taxas:</strong> R$ {{ "%.2f"|format(nota.taxas) }}
-        </div>
-        <div>
-            <strong>ID da Nota:</strong> {{ nota.id }}
-        </div>
     </div>
 
-    <h3>Operações ({{ operacoes|length }} encontradas)</h3>
+    <h3>Operações</h3>
     <table>
         <thead>
             <tr>
@@ -47,9 +41,7 @@
             </tr>
             {% else %}
             <tr>
-                <td colspan="5" style="text-align: center; color: #e74c3c;">
-                    Nenhuma operação encontrada para esta nota (ID: {{ nota.id }})
-                </td>
+                <td colspan="5" style="text-align: center;">Nenhuma operação encontrada</td>
             </tr>
             {% endfor %}
         </tbody>

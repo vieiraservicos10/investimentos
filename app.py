@@ -23,8 +23,9 @@ def index():
         total_depositado = sum(row[2] for row in saldos)
         total_compras = sum(row[3] for row in saldos)
         total_vendas = sum(row[4] for row in saldos)
-        saldo_total = sum(row[5] for row in saldos)
-        total_investido = sum(row[6] for row in saldos)
+        total_taxas = sum(row[5] for row in saldos)
+        saldo_total = sum(row[6] for row in saldos)
+        total_investido = sum(row[7] for row in saldos)
         
         return render_template('index.html',
                              saldos=saldos,
@@ -34,6 +35,7 @@ def index():
                              total_depositado=total_depositado,
                              total_compras=total_compras,
                              total_vendas=total_vendas,
+                             total_taxas=total_taxas,
                              total_investido=total_investido,
                              saldo_total=saldo_total)
     except Exception as e:
@@ -72,11 +74,12 @@ def notas_corretagem():
             corretora_id = request.form['corretora_id']
             numero_nota = request.form['numero_nota']
             valor_total = float(request.form['valor_total'])
+            taxas = float(request.form.get('taxas', 0))  # NOVO CAMPO
             
-            print(f"Dados da nota: Data={data}, Corretora_ID={corretora_id}, N°={numero_nota}, Total={valor_total}")
+            print(f"Dados da nota: Data={data}, Corretora_ID={corretora_id}, N°={numero_nota}, Total={valor_total}, Taxas={taxas}")
             
             nota = NotaCorretagem(data=data, corretora_id=corretora_id, 
-                                numero_nota=numero_nota, valor_total=valor_total)
+                                numero_nota=numero_nota, valor_total=valor_total, taxas=taxas)
             nota_id = nota.salvar()
             
             print(f"Nota salva com ID: {nota_id}")
@@ -187,7 +190,7 @@ def debug():
         notas = NotaCorretagem.buscar_todas()
         result += f"<h3>Notas: {len(notas)}</h3>"
         for n in notas:
-            result += f"ID: {n.id}, Data: {n.data}, Corretora: {n.corretora_nome}, Total: {n.valor_total}<br>"
+            result += f"ID: {n.id}, Data: {n.data}, Corretora: {n.corretora_nome}, Total: {n.valor_total}, Taxas: {n.taxas}<br>"
             
             # Operações de cada nota
             operacoes = Operacao.buscar_por_nota(n.id)

@@ -32,7 +32,7 @@ class Database:
             )
         ''')
         
-        # Tabela de notas de corretagem (COM TAXAS)
+        # Tabela de notas de corretagem
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS notas_corretagem (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,7 +40,6 @@ class Database:
                 corretora_id INTEGER NOT NULL,
                 numero_nota TEXT,
                 valor_total REAL NOT NULL,
-                taxas REAL DEFAULT 0,
                 FOREIGN KEY (corretora_id) REFERENCES corretoras (id)
             )
         ''')
@@ -58,6 +57,12 @@ class Database:
                 FOREIGN KEY (nota_id) REFERENCES notas_corretagem (id)
             )
         ''')
+        
+        # Inserir corretoras padrão
+        cursor.execute("INSERT OR IGNORE INTO corretoras (nome) VALUES ('XP Investimentos')")
+        cursor.execute("INSERT OR IGNORE INTO corretoras (nome) VALUES ('Clear Corretora')")
+        cursor.execute("INSERT OR IGNORE INTO corretoras (nome) VALUES ('Rico Investimentos')")
+        cursor.execute("INSERT OR IGNORE INTO corretoras (nome) VALUES ('BTG Pactual')")
         
         conn.commit()
         conn.close()

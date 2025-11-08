@@ -16,6 +16,10 @@
             <h3>Total em Vendas</h3>
             <p style="font-size: 1.5rem; font-weight: bold;">R$ {{ "%.2f"|format(total_vendas) }}</p>
         </div>
+        <div style="background: #ffe6e6; padding: 1rem; border-radius: 8px;">
+            <h3>Total em Taxas</h3>
+            <p style="font-size: 1.5rem; font-weight: bold;">R$ {{ "%.2f"|format(total_taxas) }}</p>
+        </div>
         <div style="background: #d4edda; padding: 1rem; border-radius: 8px;">
             <h3>Saldo Disponível</h3>
             <p style="font-size: 1.5rem; font-weight: bold; color: {% if saldo_total >= 0 %}#27ae60{% else %}#e74c3c{% endif %};">
@@ -35,6 +39,7 @@
                     <th>Depositado</th>
                     <th>Compras</th>
                     <th>Vendas</th>
+                    <th>Taxas</th>
                     <th>Saldo Disponível</th>
                 </tr>
             </thead>
@@ -45,8 +50,9 @@
                     <td>R$ {{ "%.2f"|format(saldo[2]) }}</td>
                     <td>R$ {{ "%.2f"|format(saldo[3]) }}</td>
                     <td>R$ {{ "%.2f"|format(saldo[4]) }}</td>
-                    <td class="{% if saldo[5] >= 0 %}positive{% else %}negative{% endif %}">
-                        R$ {{ "%.2f"|format(saldo[5]) }}
+                    <td>R$ {{ "%.2f"|format(saldo[5]) }}</td>
+                    <td class="{% if saldo[6] >= 0 %}positive{% else %}negative{% endif %}">
+                        R$ {{ "%.2f"|format(saldo[6]) }}
                     </td>
                 </tr>
                 {% endfor %}
@@ -119,6 +125,7 @@
                     <th>Corretora</th>
                     <th>N° Nota</th>
                     <th>Valor</th>
+                    <th>Taxas</th>
                 </tr>
             </thead>
             <tbody>
@@ -128,10 +135,11 @@
                     <td>{{ nota.corretora_nome }}</td>
                     <td>{{ nota.numero_nota or '-' }}</td>
                     <td>R$ {{ "%.2f"|format(nota.valor_total) }}</td>
+                    <td>R$ {{ "%.2f"|format(nota.taxas) }}</td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="4" style="text-align: center;">Nenhuma nota cadastrada</td>
+                    <td colspan="5" style="text-align: center;">Nenhuma nota cadastrada</td>
                 </tr>
                 {% endfor %}
             </tbody>

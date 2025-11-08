@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <h2>Dashboard</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 2rem 0;">
+        <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px;">
+            <h3>Total Investido</h3>
+            <p style="font-size: 1.5rem; font-weight: bold;">R$ {{ "%.2f"|format(total_investido) }}</p>
+        </div>
+        <div style="background: #fff3cd; padding: 1rem; border-radius: 8px;">
+            <h3>Total Retirado</h3>
+            <p style="font-size: 1.5rem; font-weight: bold;">R$ {{ "%.2f"|format(total_retirado) }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Últimas Operações</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Corretora</th>
+                <th>Ativo</th>
+                <th>Tipo</th>
+                <th>Quantidade</th>
+                <th>Preço Unit.</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for op in operacoes %}
+            <tr>
+                <td>{{ op.data }}</td>
+                <td>{{ op.corretora_nome }}</td>
+                <td>{{ op.ativo_ticker }}</td>
+                <td>{{ op.tipo }}</td>
+                <td>{{ op.quantidade }}</td>
+                <td>R$ {{ "%.2f"|format(op.preco_unitario) }}</td>
+                <td>R$ {{ "%.2f"|format(op.total) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
