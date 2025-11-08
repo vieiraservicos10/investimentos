@@ -17,35 +17,44 @@ class Database:
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS corretoras (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                nome TEXT UNIQUE NOT NULL,
-                saldo REAL DEFAULT 0
+                nome TEXT UNIQUE NOT NULL
             )
         ''')
         
-        # Tabela de ativos
+        # Tabela de depósitos
         cursor.execute('''
-            CREATE TABLE IF NOT EXISTS ativos (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                ticker TEXT NOT NULL,
-                nome TEXT,
-                categoria TEXT
-            )
-        ''')
-        
-        # Tabela de operações
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS operacoes (
+            CREATE TABLE IF NOT EXISTS depositos (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 data DATE NOT NULL,
                 corretora_id INTEGER NOT NULL,
-                ativo_id INTEGER NOT NULL,
-                tipo TEXT NOT NULL CHECK(tipo IN ('compra', 'venda', 'dividendo')),
+                valor REAL NOT NULL,
+                FOREIGN KEY (corretora_id) REFERENCES corretoras (id)
+            )
+        ''')
+        
+        # Tabela de notas de corretagem
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS notas_corretagem (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                data DATE NOT NULL,
+                corretora_id INTEGER NOT NULL,
+                numero_nota TEXT,
+                valor_total REAL NOT NULL,
+                FOREIGN KEY (corretora_id) REFERENCES corretoras (id)
+            )
+        ''')
+        
+        # Tabela de operações dentro das notas
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS operacoes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nota_id INTEGER NOT NULL,
+                ticker TEXT NOT NULL,
+                tipo TEXT NOT NULL CHECK(tipo IN ('C', 'V')),
                 quantidade INTEGER NOT NULL,
-                preco_unitario REAL NOT NULL,
-                taxas REAL DEFAULT 0,
+                preco REAL NOT NULL,
                 total REAL NOT NULL,
-                FOREIGN KEY (corretora_id) REFERENCES corretoras (id),
-                FOREIGN KEY (ativo_id) REFERENCES ativos (id)
+                FOREIGN KEY (nota_id) REFERENCES notas_corretagem (id)
             )
         ''')
         
