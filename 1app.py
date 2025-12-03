@@ -1,3 +1,4 @@
+# primeira versão
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from models import Corretora, Ativo, Operacao, Relatorio
 from datetime import datetime
